@@ -1,0 +1,6 @@
+# Keep line endings consistent between Windows and CI (Linux)
+* text=auto eol=lf
+*.png binary
+*.jpg binary
+*.ico binary
+*.woff2 binary

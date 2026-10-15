@@ -1,0 +1,97 @@
+name: CI/CD
+
+# Every push and pull request: lint, unit tests, build, browser tests, Terraform checks.
+# Push to main: deploy to dev automatically, then to prod after you approve it in GitHub.
+# Deploy jobs are skipped until the AWS_ROLE_ARN repository variable exists (see docs/SETUP_AWS.md).
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Lint, test, build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - run: npm ci
+      - run: npm run lint
+      - run: npm test
+
+      - name: Build static site
+        run: npm run build
+        env:
+          NEXT_PUBLIC_SITE_URL: ${{ vars.SITE_URL }}
+          NEXT_TELEMETRY_DISABLED: 1
+
+      - name: Install Playwright browser
+        run: npx playwright install --with-deps chromium
+
+      - name: Browser tests
+        run: npm run test:e2e
+
+      - name: Upload test report on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: test-results/
+          retention-days: 7
+
+      - name: Upload site
+        uses: actions/upload-artifact@v4
+        with:
+          name: site
+          path: out/
+          retention-days: 7
+
+  terraform:
+    name: Terraform checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+      - run: terraform fmt -check -recursive infra
+      - name: Validate dev and prod
+        run: |
+          for env in dev prod; do
+            terraform -chdir=infra/envs/$env init -backend=false -input=false
+            terraform -chdir=infra/envs/$env validate
+          done
+
+  deploy-dev:
+    name: Deploy dev
+    needs: [test, terraform]
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main' && vars.AWS_ROLE_ARN != ''
+    uses: ./.github/workflows/deploy-env.yml
+    with:
+      environment: dev
+    permissions:
+      id-token: write
+      contents: read
+
+  deploy-prod:
+    name: Deploy prod
+    needs: deploy-dev
+    uses: ./.github/workflows/deploy-env.yml
+    with:
+      environment: prod
+    permissions:
+      id-token: write
+      contents: read
