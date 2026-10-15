@@ -1,4 +1,5 @@
 import { aiToolkit, certificates, experience, profile, projects, skills } from "@/content/profile";
+import { PAGES, pagePath, resolvePage } from "./pages";
 
 export type LineKind = "default" | "muted" | "accent" | "warn" | "error";
 
@@ -8,7 +9,8 @@ export interface OutputLine {
   href?: string;
 }
 
-export type TerminalAction = { type: "clear" } | { type: "open"; url: string };
+export type TerminalAction =
+  { type: "clear" } | { type: "open"; url: string } | { type: "navigate"; path: string };
 
 export interface CommandResult {
   lines: OutputLine[];
@@ -17,11 +19,13 @@ export interface CommandResult {
 
 export const COMMANDS: { name: string; help: string }[] = [
   { name: "help", help: "list commands" },
+  { name: "ls", help: "list the pages of this site" },
+  { name: "cd <page>", help: "open a page, e.g. cd projects" },
   { name: "whoami", help: "who I am" },
   { name: "about", help: "a little about me" },
   { name: "skills", help: "what I work with" },
   { name: "ai", help: "the AI techniques I use" },
-  { name: "projects", help: "things I've built (also: ls)" },
+  { name: "projects", help: "things I've built" },
   { name: "experience", help: "where I work" },
   { name: "certs", help: "certificates" },
   { name: "contact", help: "how to reach me" },
@@ -31,6 +35,13 @@ export const COMMANDS: { name: string; help: string }[] = [
 ];
 
 const pad = (s: string, n: number) => (s.length >= n ? s + " " : s + " ".repeat(n - s.length));
+
+/** Last line of a short answer: a link to the page with the full version. */
+const more = (slug: string): OutputLine => ({
+  text: `→ cd ${slug}  (full page)`,
+  kind: "muted",
+  href: pagePath(slug),
+});
 
 export function runCommand(rawInput: string): CommandResult {
   const input = rawInput.trim();
@@ -58,8 +69,35 @@ export function runCommand(rawInput: string): CommandResult {
         ],
       };
 
+    case "ls":
+    case "dir":
+      return {
+        lines: [
+          ...PAGES.map((p) => ({
+            text: `${pad(p.slug + "/", 15)}${p.lead}`,
+            kind: "accent" as const,
+            href: pagePath(p.slug),
+          })),
+          { text: "type 'cd <page>' or click one to open it", kind: "muted" },
+        ],
+      };
+
+    case "cd":
+    case "open": {
+      const path = resolvePage(arg);
+      if (!path) {
+        return {
+          lines: [{ text: `cd: no such page: ${arg}. type 'ls' to see pages`, kind: "error" }],
+        };
+      }
+      return {
+        lines: [{ text: `opening ${path === "/" ? "~" : "~" + path}…`, kind: "muted" }],
+        action: { type: "navigate", path },
+      };
+    }
+
     case "about":
-      return { lines: profile.about.map((text) => ({ text })) };
+      return { lines: [...profile.about.map((text) => ({ text })), more("about")] };
 
     case "skills":
       return {
@@ -71,29 +109,38 @@ export function runCommand(rawInput: string): CommandResult {
         lines: aiToolkit.map((t) => ({ text: `${pad(t.name, 22)}→ ${t.where}` })),
       };
 
-    case "ls":
     case "projects":
       return {
-        lines: projects.map((p) => ({
-          text: `${pad(p.slug + "/", 20)}${pad(p.name, 24)}[${p.status}]`,
-          kind: p.status === "live" ? "accent" : "default",
-          href: p.liveUrl,
-        })),
+        lines: [
+          ...projects.map((p) => ({
+            text: `${pad(p.slug + "/", 20)}${pad(p.name, 24)}[${p.status}]`,
+            kind: p.status === "live" ? ("accent" as const) : ("default" as const),
+            href: p.liveUrl,
+          })),
+          more("projects"),
+        ],
       };
 
     case "experience":
       return {
-        lines: experience.flatMap((e) => [
-          { text: `${e.period}`, kind: "warn" as const },
-          { text: `${e.role} · ${e.company}`, kind: "accent" as const },
-        ]),
+        lines: [
+          ...experience.flatMap((e) => [
+            { text: `${e.period}`, kind: "warn" as const },
+            { text: `${e.role} · ${e.company}`, kind: "accent" as const },
+          ]),
+          more("experience"),
+        ],
       };
 
     case "certs":
+    case "certificates":
       return {
-        lines: certificates.map((c) => ({
-          text: `${c.year}  ${c.name}${c.issuer ? " — " + c.issuer : ""}`,
-        })),
+        lines: [
+          ...certificates.map((c) => ({
+            text: `${c.year}  ${c.name}${c.issuer ? " — " + c.issuer : ""}`,
+          })),
+          more("certificates"),
+        ],
       };
 
     case "contact":
@@ -104,6 +151,7 @@ export function runCommand(rawInput: string): CommandResult {
             text: `linkedin  ${profile.linkedin.replace("https://www.", "")}`,
             href: profile.linkedin,
           },
+          more("contact"),
         ],
       };
 

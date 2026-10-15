@@ -1,8 +1,9 @@
+import Link from "next/link";
 import { profile } from "@/content/profile";
 
 export default function NotFound() {
   return (
-    <main id="main" className="container notfound">
+    <div className="container notfound">
       <div className="window" style={{ width: "100%" }}>
         <div className="window-bar">
           <span aria-hidden="true" className="dot dot-red" />
@@ -18,12 +19,12 @@ export default function NotFound() {
             404: no such file or directory
           </h1>
           <div className="hero-actions">
-            <a className="btn btn-primary" href="/">
+            <Link className="btn btn-primary" href="/">
               cd ~
-            </a>
+            </Link>
           </div>
         </div>
       </div>
-    </main>
+    </div>
   );
 }

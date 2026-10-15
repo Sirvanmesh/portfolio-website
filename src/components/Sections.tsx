@@ -1,112 +1,81 @@
-import {
-  aiToolkit,
-  certificates,
-  experience,
-  profile,
-  projects,
-  skills,
-  type Project,
-} from "@/content/profile";
+import Link from "next/link";
+import { aiToolkit, certificates, experience, profile, skills } from "@/content/profile";
+import { PAGES, pagePath } from "@/lib/pages";
 import TypedText from "./TypedText";
 import Terminal from "./Terminal";
+import ProjectList from "./ProjectList";
 
-function SectionHead({ command, title }: { command: string; title: string }) {
+/** Top of every inner page: a typed `cd` line, the title and one short line. */
+function PageHead({ slug }: { slug: string }) {
+  const page = PAGES.find((p) => p.slug === slug)!;
   return (
-    <h2 className="section-head">
-      <span className="prompt-sign">$</span> {command}
-      <span className="sr-only"> — </span> <span className="section-title sr-only">{title}</span>
-    </h2>
-  );
-}
-
-export function Nav() {
-  return (
-    <header className="nav">
-      <nav className="container nav-inner" aria-label="Main">
-        <a href="#top" className="nav-brand">
-          ~/{profile.handle}
-        </a>
-        <ul className="nav-links">
-          <li>
-            <a href="#about">./about</a>
-          </li>
-          <li>
-            <a href="#experience">./experience</a>
-          </li>
-          <li>
-            <a href="#projects">./projects</a>
-          </li>
-          <li>
-            <a href="#certificates">./certificates</a>
-          </li>
-          <li>
-            <a href="#contact" className="nav-cta">
-              ./contact
-            </a>
-          </li>
-        </ul>
-      </nav>
+    <header className="page-head">
+      <span className="prompt">
+        <span className="prompt-sign">$</span> <TypedText text={`cd ~/${slug}`} speed={45} />
+      </span>
+      <h1 className="page-title">{page.title}</h1>
+      <p className="page-lead">{`// ${page.lead}`}</p>
     </header>
   );
 }
 
-export function Hero() {
+/** Bottom of every inner page: a link to the next page in the menu. */
+function NextPage({ slug }: { slug: string }) {
+  const i = PAGES.findIndex((p) => p.slug === slug);
+  const next = PAGES[(i + 1) % PAGES.length];
   return (
-    <section id="top" className="container hero" aria-label="Introduction">
-      <div className="window">
-        <div className="window-bar">
-          <span aria-hidden="true" className="dot dot-red" />
-          <span aria-hidden="true" className="dot dot-amber" />
-          <span aria-hidden="true" className="dot dot-green" />
-          <span className="window-title">{profile.handle}@calgary: ~</span>
-        </div>
-        <div className="window-body">
-          <span className="prompt">
-            <span className="prompt-sign">$</span> <TypedText text="whoami" />
-          </span>
-          <h1 className="hero-name">
-            {profile.name}
-            <span aria-hidden="true" className="cursor" />
-          </h1>
-          <p className="hero-tagline">
-            {profile.role}. {profile.tagline} Now building AI apps and shipping them on AWS.
-          </p>
-          <span className="prompt">
-            <span className="prompt-sign">$</span> cat location.txt →{" "}
-            <span style={{ color: "var(--text)" }}>{profile.location}</span>
-          </span>
-          <div className="hero-actions">
-            <a className="btn btn-primary" href="#projects">
-              ls projects/
-            </a>
-            <a className="btn" href="#terminal">
-              try the terminal
-            </a>
-            <a className="btn" href={profile.linkedin} target="_blank" rel="noopener noreferrer">
-              open linkedin
-            </a>
-          </div>
-        </div>
-      </div>
-    </section>
+    <nav className="page-next" aria-label="Next page">
+      <Link href={pagePath(next.slug)}>
+        <span className="prompt-sign">$</span> cd ../{next.slug} <span aria-hidden="true">→</span>
+      </Link>
+    </nav>
   );
 }
 
-export function TerminalSection() {
+function InnerPage({ slug, children }: { slug: string; children: React.ReactNode }) {
   return (
-    <section id="terminal" className="container section" aria-labelledby="terminal-title">
-      <h2 id="terminal-title" className="section-head">
-        <span className="prompt-sign">$</span> ./terminal --interactive
-      </h2>
+    <div className="container page">
+      <PageHead slug={slug} />
+      {children}
+      <NextPage slug={slug} />
+    </div>
+  );
+}
+
+export function Home() {
+  return (
+    <div className="container home page">
+      <div className="home-intro">
+        <span className="prompt">
+          <span className="prompt-sign">$</span> <TypedText text="whoami" />
+        </span>
+        <h1 className="hero-name">
+          {profile.name}
+          <span aria-hidden="true" className="cursor" />
+        </h1>
+        <p className="hero-tagline">
+          {profile.role} · {profile.location}. {profile.tagline}
+        </p>
+      </div>
       <Terminal />
-    </section>
+      <div className="hero-actions">
+        <Link className="btn btn-primary" href={pagePath("projects")}>
+          ls projects/
+        </Link>
+        <Link className="btn" href={pagePath("about")}>
+          cat about.md
+        </Link>
+        <a className="btn" href={profile.linkedin} target="_blank" rel="noopener noreferrer">
+          open linkedin ↗
+        </a>
+      </div>
+    </div>
   );
 }
 
 export function About() {
   return (
-    <section id="about" className="container section" aria-label="About and skills">
-      <SectionHead command="cat about.md skills.sql" title="About and skills" />
+    <InnerPage slug="about">
       <div className="grid-2">
         <div className="card">
           <span className="card-label">// about.md</span>
@@ -115,54 +84,50 @@ export function About() {
           ))}
         </div>
         <div className="card">
-          <span className="card-label">// skills.sql</span>
-          <span className="skill-row">
-            <span className="kw">SELECT</span> skill <span className="kw">FROM</span>{" "}
-            {profile.handle}
-          </span>
-          <span className="skill-row">
-            <span className="kw">GROUP BY</span> area;
-          </span>
+          <span className="card-label">// skills</span>
           <dl className="skill-list">
             {skills.map((g) => (
-              <div key={g.label} style={{ display: "contents" }}>
+              <div key={g.label} className="skill-row">
                 <dt className="skill-group">{g.label}</dt>
-                <dd style={{ margin: 0 }}>{g.items.join(", ")}</dd>
+                <dd>
+                  <ul className="tags">
+                    {g.items.map((s) => (
+                      <li key={s}>{s}</li>
+                    ))}
+                  </ul>
+                </dd>
               </div>
             ))}
           </dl>
         </div>
       </div>
-    </section>
-  );
-}
-
-export function AiToolkit() {
-  return (
-    <section id="ai" className="container section" aria-label="AI toolkit">
-      <SectionHead command="cat ai_toolkit.json" title="AI toolkit" />
-      <ul className="toolkit">
-        {aiToolkit.map((t) => (
-          <li key={t.name}>
-            <strong>{t.name}</strong>
-            <span>→ {t.where}</span>
-          </li>
-        ))}
-      </ul>
-    </section>
+      <details className="card more">
+        <summary>
+          <span className="prompt-sign">$</span> cat ai_toolkit.json
+          <span className="more-hint"> — how I use AI</span>
+        </summary>
+        <ul className="toolkit">
+          {aiToolkit.map((t) => (
+            <li key={t.name}>
+              <strong>{t.name}</strong>
+              <span>→ {t.where}</span>
+            </li>
+          ))}
+        </ul>
+      </details>
+    </InnerPage>
   );
 }
 
 export function Experience() {
   return (
-    <section id="experience" className="container section" aria-label="Experience">
-      <SectionHead command="git log --career" title="Experience" />
+    <InnerPage slug="experience">
       {experience.map((e) => (
         <div className="timeline" key={e.company + e.role}>
           <span className="timeline-period">{e.period}</span>
-          <h3 className="timeline-role">
+          <h2 className="timeline-role">
             {e.role} · {e.company}
-          </h3>
+          </h2>
           <span className="prompt">{e.location}</span>
           <ul>
             {e.highlights.map((h) => (
@@ -171,83 +136,43 @@ export function Experience() {
           </ul>
         </div>
       ))}
-    </section>
+    </InnerPage>
   );
 }
 
-const statusClass: Record<Project["status"], string> = {
-  live: "status-live",
-  "private build": "status-private",
-  "in progress": "status-progress",
-};
-
 export function Projects() {
   return (
-    <section id="projects" className="container section" aria-label="Projects">
-      <SectionHead command="ls projects/" title="Projects" />
-      <ul className="projects">
-        {projects.map((p) => (
-          <li key={p.slug}>
-            <article className={`project ${p.status === "live" ? "project-live" : ""}`}>
-              <span className="project-slug">{p.slug}/</span>
-              <h3 className="project-name">{p.name}</h3>
-              <p className="project-summary">{p.summary}</p>
-              <ul className="tags" aria-label="Tech">
-                {p.tags.map((t) => (
-                  <li key={t}>{t}</li>
-                ))}
-              </ul>
-              <span className={`status ${statusClass[p.status]}`}>[{p.status}]</span>
-              {(p.liveUrl || p.repoUrl) && (
-                <span className="project-links">
-                  {p.liveUrl && (
-                    <a href={p.liveUrl} target="_blank" rel="noopener noreferrer">
-                      open ↗
-                    </a>
-                  )}
-                  {p.repoUrl && (
-                    <a href={p.repoUrl} target="_blank" rel="noopener noreferrer">
-                      code ↗
-                    </a>
-                  )}
-                </span>
-              )}
-            </article>
-          </li>
-        ))}
-      </ul>
-    </section>
+    <InnerPage slug="projects">
+      <ProjectList />
+    </InnerPage>
   );
 }
 
 export function Certificates() {
   return (
-    <section id="certificates" className="container section" aria-label="Certificates">
-      <SectionHead command="ls certificates/" title="Certificates" />
-      <div className="card">
-        <span className="card-label">// certificates</span>
-        <ul className="certs">
-          {certificates.map((c) => (
-            <li key={c.name}>
-              <span className="year">{c.year}</span>
+    <InnerPage slug="certificates">
+      <ul className="certs">
+        {certificates.map((c) => (
+          <li key={c.name}>
+            <span className="year">{c.year}</span>
+            <span>
               {c.name}
               {c.issuer && <span className="issuer"> — {c.issuer}</span>}
-            </li>
-          ))}
-        </ul>
-      </div>
-    </section>
+            </span>
+          </li>
+        ))}
+      </ul>
+    </InnerPage>
   );
 }
 
 export function Contact() {
   return (
-    <section id="contact" className="container section" aria-label="Contact">
-      <SectionHead command="./contact --now" title="Contact" />
+    <InnerPage slug="contact">
       <div className="window">
         <div className="window-body contact-body">
           <p className="contact-title">Let&apos;s talk data, automation and AI.</p>
-          <p style={{ margin: 0, color: "var(--muted)" }}>
+          <p className="contact-note">
             The quickest way to reach me is email. I&apos;m also on LinkedIn.
           </p>
           <div className="hero-actions">
@@ -255,12 +180,12 @@ export function Contact() {
               email me
             </a>
             <a className="btn" href={profile.linkedin} target="_blank" rel="noopener noreferrer">
-              linkedin
+              linkedin ↗
             </a>
           </div>
         </div>
       </div>
-    </section>
+    </InnerPage>
   );
 }
 

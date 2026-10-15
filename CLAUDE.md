@@ -19,16 +19,17 @@ Browser tests need `npx playwright install chromium` once.
 
 ## Layout
 
-| Path                         | What                                                       |
-| ---------------------------- | ---------------------------------------------------------- |
-| `src/content/profile.ts`     | All text: profile, skills, projects, experience, certs     |
-| `src/lib/terminal.ts`        | Interactive terminal commands (pure function, unit tested) |
-| `src/components/`            | Page sections, `Terminal`, `TypedText`                     |
-| `infra/bootstrap/`           | One-time CloudFormation: OIDC role, state bucket, budget   |
-| `infra/modules/static-site/` | S3 + CloudFront module                                     |
-| `infra/envs/{dev,prod}/`     | Terraform roots per environment                            |
-| `.github/workflows/`         | CI/CD: test → dev → (approval) → prod; manual destroy      |
-| `docs/`                      | Setup and how-to guides                                    |
+| Path                         | What                                                                  |
+| ---------------------------- | --------------------------------------------------------------------- |
+| `src/content/profile.ts`     | All text: profile, skills, projects, experience, certs                |
+| `src/lib/terminal.ts`        | Interactive terminal commands (pure function, unit tested)            |
+| `src/lib/pages.ts`           | Page list (menu, `ls`, `cd`); one route per page in `src/app/<slug>/` |
+| `src/components/`            | Page bodies (`Sections.tsx`), `Nav`, `Terminal`, `ProjectList`        |
+| `infra/bootstrap/`           | One-time CloudFormation: OIDC role, state bucket, budget              |
+| `infra/modules/static-site/` | S3 + CloudFront module                                                |
+| `infra/envs/{dev,prod}/`     | Terraform roots per environment                                       |
+| `.github/workflows/`         | CI/CD: test → dev → (approval) → prod; manual destroy                 |
+| `docs/`                      | Setup and how-to guides                                               |
 
 ## Adding a terminal command
 

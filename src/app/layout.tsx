@@ -2,13 +2,18 @@ import type { Metadata, Viewport } from "next";
 import "@fontsource-variable/jetbrains-mono";
 import "./globals.css";
 import { profile } from "@/content/profile";
+import Nav from "@/components/Nav";
+import { Footer } from "@/components/Sections";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
 const description = `${profile.role} in ${profile.location}. ${profile.tagline}`;
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
-  title: `${profile.name} — ${profile.role}`,
+  title: {
+    default: `${profile.name} — ${profile.role}`,
+    template: `%s · ${profile.name}`,
+  },
   description,
   icons: { icon: "/favicon.svg" },
   openGraph: {
@@ -33,7 +38,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <a className="skip-link" href="#main">
           Skip to content
         </a>
-        {children}
+        <Nav />
+        <main id="main">{children}</main>
+        <Footer />
       </body>
     </html>
   );
