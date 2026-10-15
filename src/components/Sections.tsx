@@ -188,26 +188,3 @@ export function Contact() {
     </InnerPage>
   );
 }
-
-export function Footer() {
-  return (
-    <footer className="footer">
-      <div className="container footer-inner">
-        <span>
-          © {new Date().getFullYear()} {profile.name}
-        </span>
-        <span>
-          next.js → s3 + cloudfront · terraform · github actions
-          {profile.sourceUrl && (
-            <>
-              {" · "}
-              <a href={profile.sourceUrl} target="_blank" rel="noopener noreferrer">
-                source
-              </a>
-            </>
-          )}
-        </span>
-      </div>
-    </footer>
-  );
-}

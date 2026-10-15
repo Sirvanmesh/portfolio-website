@@ -3,7 +3,6 @@ import "@fontsource-variable/jetbrains-mono";
 import "./globals.css";
 import { profile } from "@/content/profile";
 import Nav from "@/components/Nav";
-import { Footer } from "@/components/Sections";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
 const description = `${profile.role} in ${profile.location}. ${profile.tagline}`;
@@ -40,7 +39,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </a>
         <Nav />
         <main id="main">{children}</main>
-        <Footer />
       </body>
     </html>
   );
