@@ -53,7 +53,7 @@ export const profile = {
   email: "mohamadafsharnejad@gmail.com",
   linkedin: "https://www.linkedin.com/in/mohammad-afshar-nejad-18393824b",
   /** set after the GitHub repo exists, e.g. "https://github.com/<you>/portfolio-website" */
-  sourceUrl: "",
+  sourceUrl: "https://github.com/Sirvanmesh/portfolio-website",
   about: [
     "I build reporting datasets, Power BI dashboards and automations that take repetitive work off people's plates.",
     "Outside work I build AI tools: multi-agent systems, local models, and apps where an AI coding agent does the heavy lifting while I design the system.",

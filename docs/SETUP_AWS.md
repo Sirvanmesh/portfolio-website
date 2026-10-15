@@ -31,10 +31,19 @@ aws cloudformation describe-stacks --stack-name portfolio-website-bootstrap \
   --query "Stacks[0].Outputs" --output table
 ```
 
-> Error "Provider with url https://token.actions.githubusercontent.com already exists"?
+> Error "Provider with url https://token.actions.githubusercontent.com already exists", or
+> `AWS::EarlyValidation::ResourceExistenceCheck`?
 > Your account already has the GitHub provider. Add
 > `ExistingOIDCProviderArn=arn:aws:iam::<ACCOUNT_ID>:oidc-provider/token.actions.githubusercontent.com`
 > to `--parameter-overrides` and run it again.
+
+> `GitHubOwner` must match your GitHub username exactly, including capital letters.
+
+> Deploy fails with "Not authorized to perform sts:AssumeRoleWithWebIdentity"?
+> Your repo may use GitHub's immutable OIDC subject. Run
+> `gh api repos/<OWNER>/portfolio-website/actions/oidc/customization/sub`. If it shows
+> `"use_immutable_subject":true`, add `GitHubSubjectPrefix=<the sub_claim_prefix value>` to
+> `--parameter-overrides` and run the deploy command again.
 
 ## Step 2 — Tell GitHub where to deploy
 

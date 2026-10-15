@@ -24,9 +24,17 @@ Parameters:
     Description: >-
       Leave empty. Only fill this if your account already has the GitHub OIDC provider
       (token.actions.githubusercontent.com); paste its ARN here.
+  GitHubSubjectPrefix:
+    Type: String
+    Default: ""
+    Description: >-
+      Leave empty unless your repository uses GitHub's immutable OIDC subject. Then paste the
+      sub_claim_prefix from `gh api repos/OWNER/REPO/actions/oidc/customization/sub`,
+      for example repo:Owner@123/portfolio-website@456.
 
 Conditions:
   CreateOIDCProvider: !Equals [!Ref ExistingOIDCProviderArn, ""]
+  UseLegacySubject: !Equals [!Ref GitHubSubjectPrefix, ""]
 
 Resources:
   GitHubOIDCProvider:
@@ -93,7 +101,10 @@ Resources:
               StringEquals:
                 token.actions.githubusercontent.com:aud: sts.amazonaws.com
               StringLike:
-                token.actions.githubusercontent.com:sub: !Sub repo:${GitHubOwner}/${GitHubRepo}:*
+                token.actions.githubusercontent.com:sub: !If
+                  - UseLegacySubject
+                  - !Sub repo:${GitHubOwner}/${GitHubRepo}:*
+                  - !Sub ${GitHubSubjectPrefix}:*
       Policies:
         - PolicyName: portfolio-website-deploy
           PolicyDocument:

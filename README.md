@@ -3,7 +3,7 @@
 A terminal-style personal portfolio website with an interactive command line (`help`, `projects`, `skills`, `contact`…).
 It is a static Next.js site hosted on **AWS S3 + CloudFront**. **Terraform** creates the infrastructure, and **GitHub Actions** tests and deploys it on every push.
 
-**Live:** _add the CloudFront URL here after the first deploy_
+**Live:** https://d3cfwdpxqg4eq6.cloudfront.net
 
 ## What this project proves
 
