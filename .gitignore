@@ -31,3 +31,8 @@ Thumbs.db
 .vscode/*
 !.vscode/extensions.json
 .idea/
+
+# chat API bundles
+chat-api/dist/
+chat-api/.dev/
+infra/envs/*/.build/

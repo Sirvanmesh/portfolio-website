@@ -7,3 +7,5 @@ package-lock.json
 infra/**/.terraform
 *.tf
 *.hcl
+chat-api/dist
+chat-api/.dev

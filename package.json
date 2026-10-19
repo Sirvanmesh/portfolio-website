@@ -6,6 +6,8 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "build:chat": "esbuild chat-api/src/handler.ts --bundle --platform=node --target=node22 --format=esm --minify --legal-comments=none --external:@aws-sdk/* --banner:js=\"import{createRequire}from'module';const require=createRequire(import.meta.url);\" --outfile=chat-api/dist/index.mjs",
+    "chat:dev": "esbuild chat-api/src/dev-server.ts --bundle --platform=node --target=node22 --format=esm --packages=external --log-level=warning --outfile=chat-api/.dev/server.mjs && node --env-file=.env chat-api/.dev/server.mjs",
     "start": "serve out -l 3000",
     "typecheck": "tsc --noEmit",
     "format": "prettier --write .",
@@ -14,7 +16,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
-    "check": "npm run lint && npm run test && npm run build && npm run test:e2e"
+    "check": "npm run lint && npm run test && npm run build && npm run build:chat && npm run test:e2e"
   },
   "engines": {
     "node": ">=22"
@@ -26,10 +28,14 @@
     "react-dom": "19.3.1"
   },
   "devDependencies": {
+    "@anthropic-ai/sdk": "0.135.0",
+    "@aws-sdk/client-dynamodb": "3.1152.0",
+    "@aws-sdk/client-ssm": "3.1152.0",
     "@playwright/test": "1.64.1",
     "@types/node": "22.20.5",
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",
+    "esbuild": "0.28.2",
     "prettier": "3.9.10",
     "serve": "14.2.6",
     "typescript": "5.9.3",

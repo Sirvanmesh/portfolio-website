@@ -39,6 +39,9 @@ jobs:
           NEXT_PUBLIC_SITE_URL: ${{ vars.SITE_URL }}
           NEXT_TELEMETRY_DISABLED: 1
 
+      - name: Build chat API bundle
+        run: npm run build:chat
+
       - name: Install Playwright browser
         run: npx playwright install --with-deps chromium
 
@@ -58,6 +61,13 @@ jobs:
         with:
           name: site
           path: out/
+          retention-days: 7
+
+      - name: Upload chat API bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: chat-api
+          path: chat-api/dist/
           retention-days: 7
 
   terraform:

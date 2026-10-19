@@ -124,9 +124,101 @@ Resources:
                 Effect: Allow
                 Action: sts:GetCallerIdentity
                 Resource: "*"
+              # ---- chat bot API (Lambda + DynamoDB rate limit) ----
+              - Sid: ChatLambda
+                Effect: Allow
+                Action: lambda:*
+                Resource:
+                  - !Sub arn:aws:lambda:*:${AWS::AccountId}:function:portfolio-website-*
+              - Sid: ChatRateLimitTable
+                Effect: Allow
+                Action: dynamodb:*
+                Resource:
+                  - !Sub arn:aws:dynamodb:*:${AWS::AccountId}:table/portfolio-website-*
+              - Sid: ChatLogs
+                Effect: Allow
+                Action: logs:*
+                Resource:
+                  - !Sub arn:aws:logs:*:${AWS::AccountId}:log-group:/aws/lambda/portfolio-website-*
+              - Sid: ChatLogsDescribe
+                Effect: Allow
+                Action: logs:DescribeLogGroups
+                Resource: "*"
+              # The deploy role may only create chat roles that carry the boundary below,
+              # so a role it creates can never have more access than the boundary allows.
+              - Sid: ChatRoleCreate
+                Effect: Allow
+                Action:
+                  - iam:CreateRole
+                  - iam:PutRolePolicy
+                  - iam:DeleteRolePolicy
+                  - iam:PutRolePermissionsBoundary
+                Resource: !Sub arn:aws:iam::${AWS::AccountId}:role/portfolio-website-*-chat
+                Condition:
+                  StringEquals:
+                    iam:PermissionsBoundary: !Ref ChatBoundary
+              - Sid: ChatRoleManage
+                Effect: Allow
+                Action:
+                  - iam:GetRole
+                  - iam:GetRolePolicy
+                  - iam:ListRolePolicies
+                  - iam:ListAttachedRolePolicies
+                  - iam:ListInstanceProfilesForRole
+                  - iam:DeleteRole
+                  - iam:TagRole
+                  - iam:UntagRole
+                  - iam:UpdateRole
+                  - iam:UpdateAssumeRolePolicy
+                Resource: !Sub arn:aws:iam::${AWS::AccountId}:role/portfolio-website-*-chat
+              - Sid: ChatRolePass
+                Effect: Allow
+                Action: iam:PassRole
+                Resource: !Sub arn:aws:iam::${AWS::AccountId}:role/portfolio-website-*-chat
+                Condition:
+                  StringEquals:
+                    iam:PassedToService: lambda.amazonaws.com
+              - Sid: ReadChatBoundary
+                Effect: Allow
+                Action:
+                  - iam:GetPolicy
+                  - iam:GetPolicyVersion
+                Resource: !Ref ChatBoundary
       Tags:
         - Key: project
           Value: portfolio-website
+
+  # The most any chat bot Lambda role can ever do: write its logs, update its rate-limit
+  # table, and read the Anthropic key parameter.
+  ChatBoundary:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      ManagedPolicyName: portfolio-website-chat-boundary
+      Description: Permissions boundary for the portfolio chat bot Lambda roles.
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: Logs
+            Effect: Allow
+            Action:
+              - logs:CreateLogStream
+              - logs:PutLogEvents
+            Resource: !Sub arn:aws:logs:*:${AWS::AccountId}:log-group:/aws/lambda/portfolio-website-*
+          - Sid: RateLimitTable
+            Effect: Allow
+            Action: dynamodb:UpdateItem
+            Resource: !Sub arn:aws:dynamodb:*:${AWS::AccountId}:table/portfolio-website-*
+          - Sid: AnthropicKey
+            Effect: Allow
+            Action: ssm:GetParameter
+            Resource: !Sub arn:aws:ssm:*:${AWS::AccountId}:parameter/portfolio-website/*
+          - Sid: DecryptKey
+            Effect: Allow
+            Action: kms:Decrypt
+            Resource: "*"
+            Condition:
+              StringLike:
+                kms:ViaService: ssm.*.amazonaws.com
 
   MonthlyBudget:
     Type: AWS::Budgets::Budget

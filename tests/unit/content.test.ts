@@ -1,3 +1,5 @@
+import { readdirSync, readFileSync } from "node:fs";
+import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { certificates, experience, profile, projects } from "@/content/profile";
 
@@ -30,6 +32,17 @@ describe("content", () => {
   it("has experience and certificates", () => {
     expect(experience.length).toBeGreaterThan(0);
     expect(certificates.length).toBeGreaterThan(0);
+  });
+
+  it("never talks about hiring anywhere on the site", () => {
+    const files = readdirSync("src", { recursive: true, encoding: "utf8" }).filter((f) =>
+      /\.(ts|tsx)$/.test(f),
+    );
+    expect(files.length).toBeGreaterThan(0);
+    for (const f of files) {
+      const text = readFileSync(join("src", f), "utf8");
+      expect(text, f).not.toMatch(/\bhir(e|es|ed|ing)\b|recruit/i);
+    }
   });
 
   it("never mentions private work systems", () => {

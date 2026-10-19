@@ -33,6 +33,12 @@ jobs:
           name: site
           path: out
 
+      - name: Download chat API bundle
+        uses: actions/download-artifact@v4
+        with:
+          name: chat-api
+          path: chat-api/dist
+
       - name: Sign in to AWS (OIDC, no stored keys)
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -54,6 +60,10 @@ jobs:
           echo "bucket=$(terraform -chdir=$TF_DIR output -raw bucket_name)" >> "$GITHUB_OUTPUT"
           echo "distribution=$(terraform -chdir=$TF_DIR output -raw distribution_id)" >> "$GITHUB_OUTPUT"
           echo "site_url=$(terraform -chdir=$TF_DIR output -raw site_url)" >> "$GITHUB_OUTPUT"
+          echo "chat_url=$(terraform -chdir=$TF_DIR output -raw chat_api_url)" >> "$GITHUB_OUTPUT"
+
+      - name: Point the chat widget at this environment
+        run: echo "{\"url\":\"${{ steps.tf.outputs.chat_url }}\"}" > out/chat-config.json
 
       - name: Upload site to S3
         run: |

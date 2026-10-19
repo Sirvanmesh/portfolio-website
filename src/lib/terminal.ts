@@ -184,7 +184,7 @@ export function runCommand(rawInput: string): CommandResult {
     case "sudo":
       return {
         lines: [
-          { text: "permission denied — but you can still hire me:", kind: "warn" },
+          { text: "permission denied — but you can still say hi:", kind: "warn" },
           { text: `  ${profile.email}`, href: `mailto:${profile.email}` },
         ],
       };
